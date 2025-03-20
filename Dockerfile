@@ -5,10 +5,11 @@ FROM python:3.10.12-slim
 WORKDIR /app
 
 # Instalar dependencias del sistema necesarias para mysqlclient
-RUN apt update && apt install -y \
-    apache2 \
-    apache2-dev \
-    libapache2-mod-wsgi-py3 \
+RUN apt-get update && apt-get install -y \
+    gcc \
+    python3-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar el archivo de dependencias
