@@ -10,7 +10,11 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     default-libmysqlclient-dev \
     pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+    apache2 \
+    apache2-dev \
+    libapache2-mod-wsgi-py3 && \
+    a2enmod wsgi && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copiar el archivo de dependencias
 COPY requirements.txt .
