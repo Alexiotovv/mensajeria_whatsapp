@@ -5,12 +5,10 @@ FROM python:3.10.12-slim
 WORKDIR /app
 
 # Instalar dependencias del sistema necesarias para mysqlclient
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    pkg-config \
-    libmariadb-dev \
-    default-mysql-client \
-    gcc \
+RUN apt update && apt install -y \
+    apache2 \
+    apache2-dev \
+    libapache2-mod-wsgi-py3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar el archivo de dependencias
@@ -20,11 +18,17 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Configuramos Apache para servir Django
+COPY docker/apache-config.conf /etc/apache2/sites-available/000-default.conf
+
+# Habilitamos módulos necesarios en Apache
+RUN a2enmod wsgi
+
 # Copiar el resto del código de la aplicación
 COPY . .
 
-# Exponer el puerto 8000 (puerto por defecto de Django)
-EXPOSE 8000
+# Exponemos el puerto 80 para recibir tráfico HTTP
+EXPOSE 80
 
-# Comando para ejecutar la aplicación
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "mensajeriaval.wsgi:application"]
+# Comando para iniciar Apache
+CMD ["apachectl", "-D", "FOREGROUND"]
