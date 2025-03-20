@@ -33,7 +33,7 @@ RUN a2enmod wsgi
 COPY . .
 
 # Exponemos el puerto 80 para recibir tráfico HTTP
-EXPOSE 80
+EXPOSE 8000
 
 # Comando para iniciar Apache
 CMD ["apachectl", "-D", "FOREGROUND"]
