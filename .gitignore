@@ -1,0 +1,6 @@
+bin
+lib
+pyvenv.cfg
+mensajeriaval/settings.py
+**/__pycache__/
+bot/.env
