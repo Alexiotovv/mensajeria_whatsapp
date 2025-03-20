@@ -8,9 +8,8 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     pkg-config \
-    libmysqlclient-dev \
+    libmariadb-dev \  # Usar libmariadb-dev en lugar de libmysqlclient-dev
     gcc \
-    default-libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar el archivo de dependencias
