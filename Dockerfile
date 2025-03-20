@@ -24,7 +24,7 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Configuramos Apache para servir Django
-COPY docker/apache-config.conf /etc/apache2/sites-available/000-default.conf
+COPY apache/apache-config.conf /etc/apache2/sites-available/000-default.conf
 
 # Habilitamos módulos necesarios en Apache
 RUN a2enmod wsgi
