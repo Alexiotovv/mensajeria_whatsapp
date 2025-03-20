@@ -4,3 +4,4 @@ pyvenv.cfg
 mensajeriaval/settings.py
 **/__pycache__/
 bot/.env
+docker-compose.yml
