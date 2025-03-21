@@ -103,18 +103,18 @@ def whatsapp(request):
         
         elif estado == "esperando_dni":
 
-            # if message in estudiantes:
             datos=obtener_datos_alumno(message)
-            alumno = datos[0]
-            nombre_completo = f"{alumno['ApellidoPaterno']} {alumno['ApellidoMaterno']}, {alumno['Nombres'].strip()}"
-            grado = alumno["Grado"]
-            
-            estado_usuarios[sender]["dni"] = message
-            estado_usuarios[sender]["nombre"] = nombre_completo
-            msg.body(f"La justificación es para el alumno {nombre_completo}?\n1️⃣ Sí\n2️⃣ No")
-            estado_usuarios[sender]["estado"] = "confirmar_estudiante"
-            # else:
-                # msg.body("DNI no encontrado. Por favor, ingresa un DNI válido:")
+            if datos:
+                alumno = datos[0]
+                nombre_completo = f"{alumno['ApellidoPaterno']} {alumno['ApellidoMaterno']}, {alumno['Nombres'].strip()}"
+                grado = alumno["Grado"]
+                
+                estado_usuarios[sender]["dni"] = message
+                estado_usuarios[sender]["nombre"] = nombre_completo
+                msg.body(f"La justificación es para el alumno {nombre_completo}?\n1️⃣ Sí\n2️⃣ No")
+                estado_usuarios[sender]["estado"] = "confirmar_estudiante"
+            else:
+                msg.body("DNI no encontrado. Por favor, ingresa un DNI válido:")
         
         elif estado == "confirmar_estudiante":
             if message == "1":
