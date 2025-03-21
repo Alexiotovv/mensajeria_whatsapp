@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from rest_framework import status
 
-from bot.models import Justificaciones  # Importa tu modelo
+from .models import Justificaciones  # Importa tu modelo
 
 
 import os
