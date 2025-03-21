@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from rest_framework import status
 
+from bot.models import Justificaciones  # Importa tu modelo
 
 
 import os
@@ -69,12 +70,6 @@ TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 WHATSAPP_NUMBER = "whatsapp:+14155238886"  # Número de Twilio
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-# Base de datos simulada (JSON en el código)
-estudiantes = {
-    "12345678": "JUAN PEREZ",
-    "87654321": "MARIA LOPEZ",
-}
-
 # Diccionario para almacenar el estado de la conversación
 estado_usuarios = {}
 
@@ -111,7 +106,7 @@ def whatsapp(request):
                 
                 estado_usuarios[sender]["dni"] = message
                 estado_usuarios[sender]["nombre"] = nombre_completo
-                msg.body(f"La justificación es para el alumno {nombre_completo}?\n1️⃣ Sí\n2️⃣ No")
+                msg.body(f"La justificación es para el alumno {nombre_completo} {grado}?\n1️⃣ Sí\n2️⃣ No")
                 estado_usuarios[sender]["estado"] = "confirmar_estudiante"
             else:
                 msg.body("DNI no encontrado. Por favor, ingresa un DNI válido:")
@@ -140,15 +135,21 @@ def whatsapp(request):
 
                 try:
                     hora_actual = datetime.now().strftime("%H:%M:%S")
+                    guardar_justificacion(
+                        dni=dni,
+                        nombre=nombre_completo,
+                        descripcion=descripcion,
+                        foto_url=foto_url
+                    )
 
-                    # Guardar información en un archivo .txt
-                    with open("justificaciones.txt", "a") as file:
-                        file.write(f"DNI: {dni}\n")
-                        file.write(f"Nombre: {nombre}\n")
-                        file.write(f"Descripción: {descripcion}\n")
-                        file.write(f"Foto: {foto_url}\n")
-                        file.write(f"Hora: {hora_actual}\n")
-                        file.write("-" * 50 + "\n")
+                    # # Guardar información en un archivo .txt
+                    # with open("justificaciones.txt", "a") as file:
+                    #     file.write(f"DNI: {dni}\n")
+                    #     file.write(f"Nombre: {nombre}\n")
+                    #     file.write(f"Descripción: {descripcion}\n")
+                    #     file.write(f"Foto: {foto_url}\n")
+                    #     file.write(f"Hora: {hora_actual}\n")
+                    #     file.write("-" * 50 + "\n")
 
                     msg.body("✅ Justificación registrada exitosamente. La foto ha sido guardada.")
                 except Exception as e:
@@ -174,3 +175,22 @@ def obtener_datos_alumno(dni):
         return response.json()  # Devuelve la respuesta en formato JSON
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}  # Manejo de errores
+    
+
+def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
+    """
+    Guarda una nueva justificación en la base de datos.
+
+    :param dni: Documento de identidad del usuario
+    :param nombre: Nombre del usuario
+    :param descripcion: Descripción de la justificación
+    :param foto_url: (Opcional) URL de la foto adjunta
+    :return: Objeto Justificaciones creado
+    """
+    justificacion = Justificaciones.objects.create(
+        dni=dni,
+        nombre=nombre,
+        descripcion=descripcion,
+        foto_url=foto_url
+    )
+    return justificacion
