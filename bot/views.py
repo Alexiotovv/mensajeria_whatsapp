@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from .models import Justificaciones  # Importa tu modelo
-
+from rest_framework.generics import ListAPIView
 
 import os
 import requests
@@ -186,10 +186,14 @@ def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
 @api_view(['GET'])
 # @authentication_classes([TokenAuthentication])
 # @permission_classes([IsAuthenticated])
-def list_justificaciones(request):
-    justificaciones = Justificaciones.objects.all()  # Se consulta la base de datos
-    serializer = JustificacionesSerializer(justificaciones, many=True)  # Se serializa como lista
-    return Response(serializer.data, status=status.HTTP_200_OK)
+class ListarJustificaciones(ListAPIView):
+    queryset = Justificaciones.objects.order_by('-hora_actual')  # Ordena de más reciente a más antigua
+    serializer_class = JustificacionesSerializer
+
+# def list_justificaciones(request):
+#     justificaciones = Justificaciones.objects.all()  # Se consulta la base de datos
+#     serializer = JustificacionesSerializer(justificaciones, many=True)  # Se serializa como lista
+#     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
