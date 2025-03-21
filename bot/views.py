@@ -165,23 +165,6 @@ def whatsapp(request):
         return HttpResponse("Método no permitido", status=405)
     
 
-
-# def obtener_datos_alumno(dni):
-#     url = f"https://colcoopcv.com/buscar/alumno/{dni}"  # Construye la URL con el DNI
-#     try:
-#         response = requests.get(url)  # Hace la solicitud GET
-#         response.raise_for_status()  # Lanza un error si la solicitud falla
-#         datos = response.json()  # Convierte la respuesta en JSON
-
-#         if datos and isinstance(datos, list):  # Verifica que la respuesta sea una lista con datos
-#             alumno = datos[0]  # Obtiene el primer elemento de la lista
-#             nombre_completo = f"{alumno['ApellidoPaterno']} {alumno['ApellidoMaterno']}, {alumno['Nombres'].strip()}"
-#             grado = alumno["Grado"]
-#             return f"{nombre_completo} - {grado}"
-#         else:
-#             return "No se encontraron datos para el DNI proporcionado."
-#     except requests.exceptions.RequestException as e:
-#         return f"Error: {e}"
     
 def obtener_datos_alumno(dni):
     url = f"https://colcoopcv.com/buscar/alumno/{dni}"  # Construye la URL con el DNI
