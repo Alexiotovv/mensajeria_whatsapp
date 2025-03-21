@@ -134,22 +134,12 @@ def whatsapp(request):
                 descripcion = estado_usuarios[sender]["descripcion"]
 
                 try:
-                    # hora_actual = datetime.now().strftime("%H:%M:%S")
                     guardar_justificacion(
                         dni=dni,
                         nombre=nombre,
                         descripcion=descripcion,
                         foto_url=foto_url
                     )
-
-                    # # Guardar información en un archivo .txt
-                    # with open("justificaciones.txt", "a") as file:
-                    #     file.write(f"DNI: {dni}\n")
-                    #     file.write(f"Nombre: {nombre}\n")
-                    #     file.write(f"Descripción: {descripcion}\n")
-                    #     file.write(f"Foto: {foto_url}\n")
-                    #     file.write(f"Hora: {hora_actual}\n")
-                    #     file.write("-" * 50 + "\n")
 
                     msg.body("✅ Justificación registrada exitosamente. La foto ha sido guardada.")
                 except Exception as e:
