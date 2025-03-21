@@ -134,10 +134,10 @@ def whatsapp(request):
                 descripcion = estado_usuarios[sender]["descripcion"]
 
                 try:
-                    hora_actual = datetime.now().strftime("%H:%M:%S")
+                    # hora_actual = datetime.now().strftime("%H:%M:%S")
                     guardar_justificacion(
                         dni=dni,
-                        nombre=nombre_completo,
+                        nombre=nombre,
                         descripcion=descripcion,
                         foto_url=foto_url
                     )
