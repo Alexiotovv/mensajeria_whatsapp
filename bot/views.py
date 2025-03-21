@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
-from .serializers import UserSerializer
+from .serializers import UserSerializer, JustificacionesSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -155,8 +155,6 @@ def whatsapp(request):
     else:
         return HttpResponse("Método no permitido", status=405)
     
-
-    
 def obtener_datos_alumno(dni):
     url = f"https://colcoopcv.com/buscar/alumno/{dni}"  # Construye la URL con el DNI
     try:
@@ -166,7 +164,6 @@ def obtener_datos_alumno(dni):
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}  # Manejo de errores
     
-
 def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
     """
     Guarda una nueva justificación en la base de datos.
@@ -184,3 +181,22 @@ def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
         foto_url=foto_url
     )
     return justificacion
+
+# @api_view(['GET'])
+# @authentication_classes([TokenAuthentication])
+# @permission_classes([IsAuthenticated])
+def list_justificaciones(request):
+    justificaciones = Justificaciones.objects.all()  # Se consulta la base de datos
+    serializer = JustificacionesSerializer(justificaciones, many=True)  # Se serializa como lista
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+# @api_view(['POST'])
+# @authentication_classes([TokenAuthentication])
+# @permission_classes([IsAuthenticated])
+def delete_justificacion(request, justificacion_id):
+    try:
+        justificacion = Justificaciones.objects.get(id=justificacion_id)  # Busca la justificación por ID
+        justificacion.delete()  # Elimina el registro
+        return Response({"mensaje": "Justificación eliminada correctamente"}, status=status.HTTP_204_NO_CONTENT)
+    except Justificaciones.DoesNotExist:
+        return Response({"error": "Justificación no encontrada"}, status=status.HTTP_404_NOT_FOUND)
