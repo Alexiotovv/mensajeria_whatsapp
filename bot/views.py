@@ -182,7 +182,8 @@ def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
     )
     return justificacion
 
-# @api_view(['GET'])
+
+@api_view(['GET'])
 # @authentication_classes([TokenAuthentication])
 # @permission_classes([IsAuthenticated])
 def list_justificaciones(request):
@@ -190,7 +191,8 @@ def list_justificaciones(request):
     serializer = JustificacionesSerializer(justificaciones, many=True)  # Se serializa como lista
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-# @api_view(['POST'])
+
+@api_view(['POST'])
 # @authentication_classes([TokenAuthentication])
 # @permission_classes([IsAuthenticated])
 def delete_justificacion(request, justificacion_id):
