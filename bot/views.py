@@ -102,13 +102,19 @@ def whatsapp(request):
                 msg.body("Hola, selecciona una opción:\n1️⃣ Justificar asistencia\n2️⃣ Matrículas y pagos")
         
         elif estado == "esperando_dni":
-            if message in estudiantes:
-                estado_usuarios[sender]["dni"] = message
-                estado_usuarios[sender]["nombre"] = estudiantes[message]
-                msg.body(f"La justificación es para el alumno {estudiantes[message]}?\n1️⃣ Sí\n2️⃣ No")
-                estado_usuarios[sender]["estado"] = "confirmar_estudiante"
-            else:
-                msg.body("DNI no encontrado. Por favor, ingresa un DNI válido:")
+
+            # if message in estudiantes:
+            datos=obtener_datos_alumno(message)
+            alumno = datos[0]
+            nombre_completo = f"{alumno['ApellidoPaterno']} {alumno['ApellidoMaterno']}, {alumno['Nombres'].strip()}"
+            grado = alumno["Grado"]
+            
+            estado_usuarios[sender]["dni"] = message
+            estado_usuarios[sender]["nombre"] = nombre_completo
+            msg.body(f"La justificación es para el alumno {nombre_completo}?\n1️⃣ Sí\n2️⃣ No")
+            estado_usuarios[sender]["estado"] = "confirmar_estudiante"
+            # else:
+                # msg.body("DNI no encontrado. Por favor, ingresa un DNI válido:")
         
         elif estado == "confirmar_estudiante":
             if message == "1":
@@ -157,3 +163,31 @@ def whatsapp(request):
         return HttpResponse(str(response), content_type="application/xml")  # Responde con XML
     else:
         return HttpResponse("Método no permitido", status=405)
+    
+
+
+# def obtener_datos_alumno(dni):
+#     url = f"https://colcoopcv.com/buscar/alumno/{dni}"  # Construye la URL con el DNI
+#     try:
+#         response = requests.get(url)  # Hace la solicitud GET
+#         response.raise_for_status()  # Lanza un error si la solicitud falla
+#         datos = response.json()  # Convierte la respuesta en JSON
+
+#         if datos and isinstance(datos, list):  # Verifica que la respuesta sea una lista con datos
+#             alumno = datos[0]  # Obtiene el primer elemento de la lista
+#             nombre_completo = f"{alumno['ApellidoPaterno']} {alumno['ApellidoMaterno']}, {alumno['Nombres'].strip()}"
+#             grado = alumno["Grado"]
+#             return f"{nombre_completo} - {grado}"
+#         else:
+#             return "No se encontraron datos para el DNI proporcionado."
+#     except requests.exceptions.RequestException as e:
+#         return f"Error: {e}"
+    
+def obtener_datos_alumno(dni):
+    url = f"https://colcoopcv.com/buscar/alumno/{dni}"  # Construye la URL con el DNI
+    try:
+        response = requests.get(url)  # Hace la solicitud GET
+        response.raise_for_status()  # Lanza un error si la solicitud falla
+        return response.json()  # Devuelve la respuesta en formato JSON
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Manejo de errores
