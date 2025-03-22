@@ -21,7 +21,8 @@ from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 from datetime import datetime
 
-
+from django.conf import settings
+from dotenv import load_dotenv
 
 
 @api_view(['POST'])
@@ -65,6 +66,8 @@ def profile(request):
     #return Response('You are login with {}'.format(request.user.username),status=status.HTTP_200_OK)
 
 # Configuración de Twilio
+load_dotenv()
+
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 WHATSAPP_NUMBER = "whatsapp:+14155238886"  # Número de Twilio
@@ -92,7 +95,7 @@ def whatsapp(request):
                 msg.body("Por favor, ingresa el DNI del estudiante:")
                 estado_usuarios[sender]["estado"] = "esperando_dni"
             elif message == "2":
-                msg.body("Para matrículas y pagos, visita: https://miportal.com/pagos o responde con tu consulta específica.")
+                msg.body("Para matrículas y pagos, visita: https://cvallejoiquitos.com/pagos.")
             else:
                 msg.body("Hola, selecciona una opción:\n1️⃣ Justificar asistencia\n2️⃣ Matrículas y pagos")
         
@@ -103,10 +106,13 @@ def whatsapp(request):
                 alumno = datos[0]
                 nombre_completo = f"{alumno['ApellidoPaterno']} {alumno['ApellidoMaterno']}, {alumno['Nombres'].strip()}"
                 grado = alumno["Grado"]
+                seccion = alumno["Seccion"]
                 
                 estado_usuarios[sender]["dni"] = message
                 estado_usuarios[sender]["nombre"] = nombre_completo
-                msg.body(f"La justificación es para el alumno {nombre_completo} {grado}?\n1️⃣ Sí\n2️⃣ No")
+                estado_usuarios[sender]["grado"] = grado
+                estado_usuarios[sender]["seccion"] = seccion
+                msg.body(f"La justificación es para el alumno {nombre_completo} {grado}-{seccion}?\n1️⃣ Sí\n2️⃣ No")
                 estado_usuarios[sender]["estado"] = "confirmar_estudiante"
             else:
                 msg.body("DNI no encontrado. Por favor, ingresa un DNI válido:")
@@ -129,15 +135,22 @@ def whatsapp(request):
         elif estado == "esperando_foto":
             if "MediaUrl0" in request.POST:
                 foto_url = request.POST["MediaUrl0"]
+                url_local = descargar_y_guardar_imagen(foto_url, request)
+               
+
                 dni = estado_usuarios[sender]["dni"]
                 nombre = estado_usuarios[sender]["nombre"]
+                grado = estado_usuarios[sender]["grado"]
+                seccion = estado_usuarios[sender]["seccion"]
                 descripcion = estado_usuarios[sender]["descripcion"]
-
+                foto_url=url_local
                 try:
                     guardar_justificacion(
                         dni=dni,
                         nombre=nombre,
-                        descripcion=descripcion,
+                        grado=grado,
+                        seccion=seccion,
+                        descripcion=descripcion,    
                         foto_url=foto_url
                     )
 
@@ -164,7 +177,7 @@ def obtener_datos_alumno(dni):
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}  # Manejo de errores
     
-def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
+def guardar_justificacion(dni, nombre,grado,seccion, descripcion, foto_url=None):
     """
     Guarda una nueva justificación en la base de datos.
 
@@ -177,11 +190,12 @@ def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
     justificacion = Justificaciones.objects.create(
         dni=dni,
         nombre=nombre,
+        grado=grado,
+        seccion=seccion,
         descripcion=descripcion,
         foto_url=foto_url
     )
     return justificacion
-
 
 # cuando se usa clase ya no va esto: @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
@@ -190,7 +204,19 @@ class ListarJustificaciones(ListAPIView):
     queryset = Justificaciones.objects.order_by('-hora_actual')  # Ordena de más reciente a más antigua
     serializer_class = JustificacionesSerializer
 
+    def get_queryset(self):
+        queryset = Justificaciones.objects.order_by('-hora_actual')
+        
+        año_actual = datetime.now().year
+        queryset = queryset.filter(hora_actual__year=año_actual)  # Filtra por año actual
 
+        grado = self.request.query_params.get('gradoFilter', None)
+        seccion = self.request.query_params.get('seccionFilter', None)
+        if grado:
+            queryset = queryset.filter(grado=grado)
+        if seccion:
+            queryset = queryset.filter(seccion=seccion)
+        return queryset
 
 @api_view(['POST'])
 # @authentication_classes([TokenAuthentication])
@@ -202,3 +228,36 @@ def delete_justificacion(request, justificacion_id):
         return Response({"mensaje": "Justificación eliminada correctamente"}, status=status.HTTP_204_NO_CONTENT)
     except Justificaciones.DoesNotExist:
         return Response({"error": "Justificación no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+def descargar_y_guardar_imagen(foto_url, request):
+    """Descarga la imagen de Twilio y la guarda en 'media/justificaciones/' con URL completa."""
+
+    # Obtener el dominio y protocolo automáticamente desde la petición
+    dominio = request.build_absolute_uri('/')[:-1]  # Obtiene "http://localhost:8000" o "https://tudominio.com"
+
+    # Nombre del archivo con timestamp
+    nombre_archivo = datetime.now().strftime("%Y%m%d%H%M%S") + ".jpg"
+
+    # Ruta donde se guardará la imagen
+    carpeta_destino = os.path.join(settings.MEDIA_ROOT, "justificaciones")
+    os.makedirs(carpeta_destino, exist_ok=True)  # Crea la carpeta si no existe
+
+    ruta_completa = os.path.join(carpeta_destino, nombre_archivo)
+
+    try:
+        # Descargar la imagen desde Twilio
+        response = requests.get(foto_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN), stream=True)
+        response.raise_for_status()
+
+        # Guardar la imagen localmente
+        with open(ruta_completa, "wb") as file:
+            for chunk in response.iter_content(1024):
+                file.write(chunk)
+
+        # Construir la URL completa con el dominio
+        url_completa = f"{dominio}{settings.MEDIA_URL}justificaciones/{nombre_archivo}"
+        return url_completa  # Guardar en la base de datos
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error descargando la imagen: {e}")
+        return None

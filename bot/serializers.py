@@ -11,5 +11,5 @@ class UserSerializer(serializers.ModelSerializer):
 class JustificacionesSerializer(serializers.ModelSerializer):
   class Meta:
     model=Justificaciones
-    fields=['id','dni','nombre','descripcion','foto_url','hora_actual']
+    fields=['id','dni','nombre','grado','seccion','descripcion','foto_url','hora_actual']
   
