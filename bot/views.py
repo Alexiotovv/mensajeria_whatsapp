@@ -184,8 +184,8 @@ def guardar_justificacion(dni, nombre, descripcion, foto_url=None):
 
 
 # cuando se usa clase ya no va esto: @api_view(['GET'])
-#@authentication_classes([TokenAuthentication])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 class ListarJustificaciones(ListAPIView):
     queryset = Justificaciones.objects.order_by('-hora_actual')  # Ordena de más reciente a más antigua
     serializer_class = JustificacionesSerializer
